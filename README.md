@@ -22,13 +22,13 @@ Or install it yourself as:
 
 ## Usage
 
-Create a Histogram object using the following there parameters:
+Create a Histogram object using the following three parameters:
 
 1. ActiveRecord query to use
 2. Name of column to count frequency of
 3. Bucket size (OPTIONAL - default is 0.5)
 
-
+<!-- -->
     histogram = PgHistogram::Histogram.new(Widget.all, 'price', 0.5)
 
 
