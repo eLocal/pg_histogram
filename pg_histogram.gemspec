@@ -1,11 +1,11 @@
 # coding: utf-8
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'activerecord_pg_histogram/version'
+require 'pg_histogram/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = "activerecord_pg_histogram"
-  spec.version       = ActiverecordPgHistogram::VERSION
+  spec.name          = "pg_histogram"
+  spec.version       = PgHistogram::VERSION
   spec.authors       = ["David Roberts"]
   spec.email         = ["david.roberts@elocal.com"]
   spec.description   = %q{Creates a Histogram fron an ActiveRecord query}
@@ -22,5 +22,4 @@ Gem::Specification.new do |spec|
   spec.add_dependency "pg"
   spec.add_development_dependency "bundler", "~> 1.3"
   spec.add_development_dependency "rake"
-  spec.add_development_dependency "factory_girl"
 end
