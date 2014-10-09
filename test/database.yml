@@ -1,0 +1,6 @@
+test:
+  adapter: postgresql
+  database: histogram_test
+  username: histogram
+  password: 5q3KwfCR
+  host: localhost
