@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.email         = ["david.roberts@elocal.com"]
   spec.description   = %q{Creates a Histogram fron an ActiveRecord query}
   spec.summary       = %q{Histograms using PostgreSQL and ActiveRecord}
-  spec.homepage      = ""
+  spec.homepage      = "https://github.com/eLocal/pg_histogram"
   spec.license       = "MIT"
 
   spec.files         = `git ls-files`.split($/)
@@ -18,8 +18,8 @@ Gem::Specification.new do |spec|
   spec.test_files    = spec.files.grep(%r{^(test|spec|features)/})
   spec.require_paths = ["lib"]
 
-  spec.add_dependency "activerecord"
-  spec.add_dependency "pg"
+  spec.add_dependency "activerecord", "~> 4.0"
+  spec.add_dependency "pg", "~> 0.1"
   spec.add_development_dependency "bundler", "~> 1.3"
   spec.add_development_dependency "rake"
 end
