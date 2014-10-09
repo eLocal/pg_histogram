@@ -23,6 +23,7 @@ Or install it yourself as:
 ## Usage
 
 Create a Histogram object using the following there parameters:
+
 1. ActiveRecord query to use
 2. Name of column to count frequency of
 3. Bucket size (OPTIONAL - default is 0.5)
