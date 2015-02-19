@@ -36,18 +36,18 @@ module PgHistogram
     def results
       # error handling case
       if max == min
-        { min => query.where("#{column} = ?", min).count }
+        { min => subquery.where("#{pure_column} = ?", min).count }
       else
         labeled_histogram
       end
     end
 
     def min
-      @min ||= round_to_increment(query.minimum(column), :down)
+      @min ||= round_to_increment(subquery.minimum(pure_column), :down)
     end
 
     def max
-      @max ||= round_to_increment(query.maximum(column), :up)
+      @max ||= round_to_increment(subquery.maximum(pure_column), :up)
     end
 
     private
@@ -85,7 +85,7 @@ module PgHistogram
     def query_for_buckets
       ActiveRecord::Base.connection.execute(
         <<-SQL
-          SELECT width_bucket(#{column}, #{min}, #{max}, #{num_buckets}) as #{BUCKET_COL},
+          SELECT width_bucket(#{pure_column}, #{min}, #{max}, #{num_buckets}) as #{BUCKET_COL},
             count(*) as #{FREQUENCY_COL}
           FROM (#{subquery.to_sql}) as subq_results
           GROUP BY #{BUCKET_COL}
@@ -98,6 +98,16 @@ module PgHistogram
     def subquery
       # override default order
       query.select(column).order('1')
+    end
+    
+    # In case the column has an alias, the pure column is just the aliased name
+    def pure_column
+      index = column =~ / as /i
+      if index
+        column[index +4..-1]
+      else
+        column
+      end
     end
   end
 end
