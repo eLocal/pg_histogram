@@ -11,10 +11,17 @@ module PgHistogram
     }
 
     # column_name name must be safe for SQL injection
-    def initialize(query, column_name, bucket_size = 0.5)
+    def initialize(query, column_name, options = 1.0)
       @query = query
       @column = column_name.to_s
-      @bucket_size = bucket_size
+      if options.is_a? Hash
+        @min = options[:min]
+        @max = options[:max]
+        @buckets = options[:buckets]
+        @bucket_size = calculate_bucket_size
+      else
+        @bucket_size = options
+      end
     end
 
     # returns histogram as hash
@@ -38,6 +45,10 @@ module PgHistogram
     end
 
     private
+    
+    def calculate_bucket_size
+      (max - min).to_f / @buckets
+    end
 
     def num_buckets
       @buckets ||= ((max - min) / bucket_size).to_i
