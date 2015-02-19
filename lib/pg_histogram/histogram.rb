@@ -15,7 +15,7 @@ module PgHistogram
       @query = query
       @column = column_name.to_s
       if options.is_a? Hash
-        @min = options[:min]
+        @min = options[:min] || 0
         @max = options[:max]
         @buckets = options[:buckets]
         @bucket_size = calculate_bucket_size
