@@ -20,7 +20,7 @@ module PgHistogram
         @buckets = options[:buckets]
         @bucket_size = calculate_bucket_size
       else
-        @bucket_size = options
+        @bucket_size = options.to_f
       end
     end
 
