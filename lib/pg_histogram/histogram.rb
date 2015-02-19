@@ -14,15 +14,19 @@ module PgHistogram
     def initialize(query, column_name, options = {})
       @query = query
       @column = column_name.to_s
-      if options[:buckets]
-        @min = options[:min] || 0
-        @max = options[:max]
-        @buckets = options[:buckets]
-        @bucket_size = calculate_bucket_size
+      if options.is_a? Hash
+        if options[:buckets]
+          @min = options[:min] || 0
+          @max = options[:max]
+          @buckets = options[:buckets]
+          @bucket_size = calculate_bucket_size
+        else
+          @min = options[:min]
+          @max = options[:max]
+          @bucket_size = options[:bucket_size].to_f || 1.0
+        end
       else
-        @min = options[:min]
-        @max = options[:max]
-        @bucket_size = options[:bucket_size].to_f || 1.0
+        @bucket_size = options.to_f
       end
     end
 
