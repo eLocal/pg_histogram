@@ -11,22 +11,18 @@ module PgHistogram
     }
 
     # column_name name must be safe for SQL injection
-    def initialize(query, column_name, options = 1.0)
+    def initialize(query, column_name, options = {})
       @query = query
       @column = column_name.to_s
-      if options.is_a? Hash
-        if options[:buckets]
-          @min = options[:min] || 0
-          @max = options[:max]
-          @buckets = options[:buckets]
-          @bucket_size = calculate_bucket_size
-        else
-          @min = options[:min]
-          @max = options[:max]
-          @bucket_size = options[:bucket_size].to_f || 1.0
-        end
+      if options[:buckets]
+        @min = options[:min] || 0
+        @max = options[:max]
+        @buckets = options[:buckets]
+        @bucket_size = calculate_bucket_size
       else
-        @bucket_size = options.to_f
+        @min = options[:min]
+        @max = options[:max]
+        @bucket_size = options[:bucket_size].to_f || 1.0
       end
     end
 
