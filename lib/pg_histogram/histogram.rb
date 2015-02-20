@@ -93,13 +93,16 @@ module PgHistogram
         SQL
       )
     end
-
     # use passed AR query as a subquery to not interfere with group clause
+    def subquery
+      # override default order
+      query.select(column).order('1')
+    end
+
+    # Use unprepared statement per https://github.com/rails/rails/issues/8743
     def subquery_sql
-      # Use unprepared statement per https://github.com/rails/rails/issues/8743
       ActiveRecord::Base.connection.unprepared_statement do 
-        # override default order
-        query.select(column).order('1').to_sql
+        subquery.to_sql
       end
     end
     
