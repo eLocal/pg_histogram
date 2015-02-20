@@ -87,7 +87,7 @@ module PgHistogram
         <<-SQL
           SELECT width_bucket(#{pure_column}, #{min}, #{max}, #{num_buckets}) as #{BUCKET_COL},
             count(*) as #{FREQUENCY_COL}
-          FROM (#{subquery.to_sql}) as subq_results
+          FROM (#{subquery_sql}) as subq_results
           GROUP BY #{BUCKET_COL}
           ORDER BY #{BUCKET_COL}
         SQL
@@ -95,9 +95,12 @@ module PgHistogram
     end
 
     # use passed AR query as a subquery to not interfere with group clause
-    def subquery
-      # override default order
-      query.select(column).order('1')
+    def subquery_sql
+      # Use unprepared statement per https://github.com/rails/rails/issues/8743
+      ActiveRecord::Base.connection.unprepared_statement do 
+        # override default order
+        query.select(column).order('1').to_sql
+      end
     end
     
     # In case the column has an alias, the pure column is just the aliased name
