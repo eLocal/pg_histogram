@@ -43,11 +43,11 @@ module PgHistogram
     end
 
     def min
-      @min ||= round_to_increment(subquery.minimum(pure_column), :down)
+      @min ||= round_to_increment(subquery.minimum(pure_column(true)), :down)
     end
 
     def max
-      @max ||= round_to_increment(subquery.maximum(pure_column), :up)
+      @max ||= round_to_increment(subquery.maximum(pure_column(true)), :up)
     end
 
     private
@@ -107,11 +107,20 @@ module PgHistogram
     end
     
     # In case the column has an alias, the pure column is just the aliased name
-    def pure_column
+    # If expression is true, only the expression (before the 'AS') is returned
+    def pure_column(expression = false)
       index = column =~ / as /i
+      # If AS is present, split and keep either side
       if index
-        column[index +4..-1]
+        if expression
+          # Keep left side
+          column[0..index]
+        else
+          # Keep right side
+          column[index + 4..-1]
+        end
       else
+        # Column was already good.
         column
       end
     end
