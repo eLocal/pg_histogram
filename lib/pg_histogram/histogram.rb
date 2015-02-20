@@ -23,7 +23,7 @@ module PgHistogram
         else
           @min = options[:min]
           @max = options[:max]
-          @bucket_size = options[:bucket_size].to_f || 1.0
+          @bucket_size = (options[:bucket_size] || 1).to_f
         end
       else
         @bucket_size = options.to_f
