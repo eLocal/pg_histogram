@@ -24,7 +24,7 @@ Create a Histogram object using the following parameters:
 
 1. ActiveRecord Relation (query) to use.
 2. Name of column to count frequency of. Also allows for aliased queries such as `'price*discount as final_price'` to create histograms on expressions.
-3. Options hash (optional). Not all combinations are allowed. For example, if `:buckets` is specified, `:min` and `:max` are required and `:bucket_size` is ignonored, and calculated. If `:buckets` is not specified, the number of buckets depends on `:bucket_size`.
+3. Options hash (optional). Not all combinations are allowed. For example, if `:buckets` is specified, `:min` and `:max` are required and `:bucket_size` is ignored, and calculated. If `:buckets` is not specified, the number of buckets depends on `:bucket_size`, and `:min` and `:max` are optional.
     - `:buckets`: number of buckets (integer)
     - `:min` and `:max`: See [width_bucket](http://www.postgresql.org/docs/9.3/static/functions-math.html)'s docs for exact meaning (defaults to the min and max values of the column).
     - `:bucket_size`: Width of each bucket (defaults to 1).
