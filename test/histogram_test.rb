@@ -60,7 +60,7 @@ class HistogramTest < Minitest::Test
   end
 
   def test_rounding_to_bucket_size
-    hist = PgHistogram::Histogram.new(nil, nil, 0.25)
+    hist = PgHistogram::Histogram.new(nil, nil, bucket_size: 0.25)
 
     assert_equal 0.5, hist.send(:round_to_increment, 0.478), '0.478 rounded to 0.25 interval'
     assert_equal 1.0, hist.send(:round_to_increment, 1.1), '1.1 rounded to 0.25 interval'
@@ -71,5 +71,54 @@ class HistogramTest < Minitest::Test
     assert_equal 0.5, hist.send(:round_to_increment, 0.478, :up), '0.478 rounded up to 0.25 interval'
     assert_equal 1.25, hist.send(:round_to_increment, 1.1, :up), '1.1 rounded up to 0.25 interval'
     assert_equal 0.5, hist.send(:round_to_increment, 0.5, :up), '0.5 rounded up to 0.25 interval'
+  end
+
+  def test_with_buckets_option
+    # Specify number of buckets
+    hist = PgHistogram::Histogram.new(Widget.all, 'price', {buckets: 5, min: 0, max: 10})
+
+    10.times { Widget.create!(price: 3.0) }
+    8.times { Widget.create!(price: 5.76) }
+    results = hist.results
+
+    assert_equal 0, hist.min, 'Histogram minimum price'
+    assert_equal 10, hist.max, 'Histogram maximum price'
+    assert_equal 5, hist.send(:num_buckets), 'Histogram buckets'
+    assert_equal 2, results.size, 'Histogram buckets with results'
+    assert_equal 10, results[2.0], 'Frequency of 2.0 bucket'
+    assert_equal 8, results[4.0], 'Frequency of 4.0 bucket'
+  end
+
+  def test_with_min_max_options
+    # Specify number of buckets
+    hist = PgHistogram::Histogram.new(Widget.all, 'price', {min: 0, max: 10})
+
+    10.times { Widget.create!(price: 3.0) }
+    8.times { Widget.create!(price: 5.76) }
+    min_price = Widget.create!(price: 0.98).price
+    max_price = Widget.create!(price: 6.0).price
+    results = hist.results
+
+    assert_equal 0, hist.min, 'Histogram minimum price'
+    assert_equal 10, hist.max, 'Histogram maximum price'
+    assert_equal 10, hist.send(:num_buckets), 'Histogram buckets'
+    assert_equal 4, results.size, 'Histogram buckets with results'
+    assert_equal 10, results[3.0], 'Frequency of 3 bucket'
+    assert_equal nil, results[4.0], 'Frequency of 4.0 bucket'
+  end
+  def test_with_aliased_expression
+    # Specify number of buckets
+    hist = PgHistogram::Histogram.new(Widget.all, 'price*2 as double_price')
+
+    5.times { Widget.create!(price: 3.0) }
+    6.times { Widget.create!(price: 6.0) }
+    results = hist.results
+
+    assert_equal 6, hist.min, 'Histogram minimum price'
+    assert_equal 12, hist.max, 'Histogram maximum price'
+    assert_equal 6, hist.send(:num_buckets), 'Histogram buckets'
+    assert_equal 2, results.size, 'Histogram buckets with results'
+    assert_equal 5, results[6.0], 'Frequency of 6.0 bucket'
+    assert_equal 6, results[12.0], 'Frequency of 12.0 bucket'
   end
 end
