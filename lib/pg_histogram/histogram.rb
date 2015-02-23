@@ -11,10 +11,23 @@ module PgHistogram
     }
 
     # column_name name must be safe for SQL injection
-    def initialize(query, column_name, bucket_size = 0.5)
+    def initialize(query, column_name, options = {})
       @query = query
       @column = column_name.to_s
-      @bucket_size = bucket_size
+      if options.is_a? Hash
+        if options[:buckets]
+          @min = options[:min] || 0
+          @max = options[:max]
+          @buckets = options[:buckets]
+          @bucket_size = calculate_bucket_size
+        else
+          @min = options[:min]
+          @max = options[:max]
+          @bucket_size = (options[:bucket_size] || 1).to_f
+        end
+      else
+        @bucket_size = options.to_f
+      end
     end
 
     # returns histogram as hash
@@ -23,21 +36,25 @@ module PgHistogram
     def results
       # error handling case
       if max == min
-        { min => query.where("#{column} = ?", min).count }
+        { min => subquery.where("#{pure_column} = ?", min).count }
       else
         labeled_histogram
       end
     end
 
     def min
-      @min ||= round_to_increment(query.minimum(column), :down)
+      @min ||= round_to_increment(subquery.minimum(pure_column(true)), :down)
     end
 
     def max
-      @max ||= round_to_increment(query.maximum(column), :up)
+      @max ||= round_to_increment(subquery.maximum(pure_column(true)), :up)
     end
 
     private
+    
+    def calculate_bucket_size
+      (max - min).to_f / @buckets
+    end
 
     def num_buckets
       @buckets ||= ((max - min) / bucket_size).to_i
@@ -68,19 +85,44 @@ module PgHistogram
     def query_for_buckets
       ActiveRecord::Base.connection.execute(
         <<-SQL
-          SELECT width_bucket(#{column}, #{min}, #{max}, #{num_buckets}) as #{BUCKET_COL},
+          SELECT width_bucket(#{pure_column}, #{min}, #{max}, #{num_buckets}) as #{BUCKET_COL},
             count(*) as #{FREQUENCY_COL}
-          FROM (#{subquery.to_sql}) as subq_results
+          FROM (#{subquery_sql}) as subq_results
           GROUP BY #{BUCKET_COL}
           ORDER BY #{BUCKET_COL}
         SQL
       )
     end
-
     # use passed AR query as a subquery to not interfere with group clause
     def subquery
       # override default order
       query.select(column).order('1')
+    end
+
+    # Use unprepared statement per https://github.com/rails/rails/issues/8743
+    def subquery_sql
+      ActiveRecord::Base.connection.unprepared_statement do 
+        subquery.to_sql
+      end
+    end
+    
+    # In case the column has an alias, the pure column is just the aliased name
+    # If expression is true, only the expression (before the 'AS') is returned
+    def pure_column(expression = false)
+      index = column =~ / as /i
+      # If AS is present, split and keep either side
+      if index
+        if expression
+          # Keep left side
+          column[0..index]
+        else
+          # Keep right side
+          column[index + 4..-1]
+        end
+      else
+        # Column was already good.
+        column
+      end
     end
   end
 end

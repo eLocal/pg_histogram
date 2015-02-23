@@ -2,9 +2,7 @@
 
 This gem allows for you to efficiently create a histogram from large data sets in your Rails applications.
 
-It uses PostgreSQL's [width_bucket](http://www.postgresql.org/docs/9.3/static/functions-math.html) function to handle the majority of the processing in the database, and only requires 3 database queries.
-
-
+It uses PostgreSQL's [width_bucket](http://www.postgresql.org/docs/9.3/static/functions-math.html) function to handle the majority of the processing in the database, and only requires 3 database queries (and only one query if min and max values are specified).
 
 ## Installation
 
@@ -22,28 +20,31 @@ Or install it yourself as:
 
 ## Usage
 
-Create a Histogram object using the following three parameters:
+Create a Histogram object using the following parameters:
 
-1. ActiveRecord query to use
-2. Name of column to count frequency of
-3. Bucket size (OPTIONAL - default is 0.5)
+1. ActiveRecord Relation (query) to use.
+2. Name of column to count frequency of. Also allows for aliased queries such as `'price*discount as final_price'` to create histograms on expressions.
+3. Options hash (optional). Not all combinations are allowed. For example, if `:buckets` is specified, `:min` and `:max` are required and `:bucket_size` is ignored, and calculated. If `:buckets` is not specified, the number of buckets depends on `:bucket_size`, and `:min` and `:max` are optional.
+    - `:buckets`: number of buckets (integer)
+    - `:min` and `:max`: See [width_bucket](http://www.postgresql.org/docs/9.3/static/functions-math.html)'s docs for exact meaning (defaults to the min and max values of the column).
+    - `:bucket_size`: Width of each bucket (defaults to 1).
 
-<!-- -->
-    histogram = PgHistogram::Histogram.new(Widget.all, 'price', 0.5)
+### Example
+Create sample data:
 
-
-Call the results method to retrieve a Hash of bucket minimums and frequency counts
-
-    # create sample data
     5.times do { Widget.create(price: 1.2) }
     10.times do { Widget.create(price: 2.9 ) }
 
-    # get the results
+Create the histogram object:
+    
+    histogram = PgHistogram::Histogram.new(Widget.all, 'price', 0.5)
+
+Call the results method to retrieve a Hash of bucket minimums and frequency counts:
+
     @histogram_data = histogram.results
      => {1.0=>5, 2.5=>10}
 
-
-The results can be used by your favorite charting libary, such as [Chartkick](https://github.com/ankane/chartkick), to plot the data.
+The results can be used by your favorite charting libary, such as [Chartkick](https://github.com/ankane/chartkick), to plot the data:
 
     <%= column_chart @histogram_data %>
 
