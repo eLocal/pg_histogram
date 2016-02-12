@@ -43,17 +43,25 @@ module PgHistogram
     end
 
     def min
-      @min ||= round_to_increment(subquery.minimum(pure_column(true)), :down)
+      @min ||= round_to_increment(source_min, :down)
     end
 
     def max
-      @max ||= round_to_increment(subquery.maximum(pure_column(true)), :up)
+      @max ||= round_to_increment(source_max, :up)
     end
 
     private
-    
+
+    def source_min
+      @source_min ||= subquery.minimum(pure_column(true))
+    end
+
+    def source_max
+      @source_max ||= subquery.maximum(pure_column(true))
+    end
+
     def calculate_bucket_size
-      (max - min).to_f / @buckets
+      (source_max - source_min).to_f / @buckets
     end
 
     def num_buckets
